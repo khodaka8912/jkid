@@ -41,6 +41,8 @@ private fun StringBuilder.serializeProperty(
 }
 
 fun KProperty<*>.getSerializer(): ValueSerializer<Any?>? {
+    val dateFormatAnn = findAnnotation<DateFormat>()
+    if (dateFormatAnn != null) return serializerForDate(dateFormatAnn.format)
     val customSerializerAnn = findAnnotation<CustomSerializer>() ?: return null
     val serializerClass = customSerializerAnn.serializerClass
 
@@ -56,7 +58,16 @@ private fun StringBuilder.serializePropertyValue(value: Any?) {
         is String -> serializeString(value)
         is Number, is Boolean -> append(value.toString())
         is List<*> -> serializeList(value)
+        is Map<*,*> -> serializeMap(value)
         else -> serializeObject(value)
+    }
+}
+
+private fun StringBuilder.serializeMap(data: Map<*, *>) {
+    data.entries.joinToStringBuilder(this, prefix = "{", postfix = "}") {
+        serializeString(it.key.toString())
+        append(": ")
+        serializePropertyValue(it.value)
     }
 }
 

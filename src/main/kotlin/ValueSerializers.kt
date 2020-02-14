@@ -2,6 +2,8 @@ package ru.yole.jkid
 
 import ru.yole.jkid.deserialization.JKidException
 import java.lang.reflect.Type
+import java.text.SimpleDateFormat
+import java.util.*
 
 fun serializerForBasicType(type: Type): ValueSerializer<out Any?> {
     assert(type.isPrimitiveOrString()) { "Expected primitive type or String: ${type.typeName}" }
@@ -72,4 +74,17 @@ object StringSerializer : ValueSerializer<String?> {
     }
 
     override fun toJsonValue(value: String?) = value
+}
+
+@Suppress("UNCHECKED_CAST")
+fun serializerForDate(format: String) = DateSerializer(format) as ValueSerializer<Any?>
+
+class DateSerializer(private val format: String) : ValueSerializer<Date?> {
+    override fun toJsonValue(value: Date?) = value?.let { SimpleDateFormat(format).format(it) }
+
+    override fun fromJsonValue(jsonValue: Any?): Date? {
+        if (jsonValue !is String?) throw JKidException("Expected date format string, was $jsonValue")
+        return jsonValue?.let { SimpleDateFormat(format).parse(jsonValue) }
+    }
+
 }

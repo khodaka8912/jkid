@@ -58,6 +58,7 @@ fun Seed.createSeedForType(paramType: Type, isList: Boolean): Seed {
         return ObjectListSeed(elementType, classInfoCache)
     }
     if (isList) throw JKidException("Object of the type ${paramType.typeName} expected, not an array")
+    if (Map::class.java.isAssignableFrom(paramClass)) return MapSeed(classInfoCache)
     return ObjectSeed(paramClass.kotlin, classInfoCache)
 }
 
@@ -123,4 +124,16 @@ class ValueListSeed(
     }
 
     override fun spawn() = elements
+}
+
+class MapSeed(override val classInfoCache: ClassInfoCache): Seed {
+    private val valueMap = mutableMapOf<String,Any?>()
+    override fun spawn() = valueMap as Map<String,Any?>
+    override fun createCompositeProperty(propertyName: String, isList: Boolean): JsonObject {
+       throw JKidException("Found object value in map")
+    }
+
+    override fun setSimpleProperty(propertyName: String, value: Any?) {
+        valueMap[propertyName] = value
+    }
 }
